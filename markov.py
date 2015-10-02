@@ -1,6 +1,6 @@
 import sys
 from random import choice
-
+import string
 
 class SimpleMarkovGenerator(object):
     # no character limit on base class
@@ -13,6 +13,8 @@ class SimpleMarkovGenerator(object):
         for file_name in filenames:
             input_text += (open(file_name).read() + " ")
         # save chains dictionary to our instance
+
+        # for the mixins, separate this functionality into a new def
         self.chains = self.make_chains(input_text)
 
         # WHY?
@@ -56,7 +58,7 @@ class SimpleMarkovGenerator(object):
             # note that order of if (cond1) AND (cond2) matters!                     
             word = choice(self.chains[key])
             # account for the " " in the join
-            if self.character_limit is not None and (current_char + len(word)) >= self.character_limit and self.char_limit:
+            if self.character_limit is not None and (current_char + len(word)) >= self.character_limit:
                 break
             words.append(word)
             key = (key[1], word)
@@ -68,14 +70,30 @@ class SimpleMarkovGenerator(object):
         return formed_text
 
 
-class TweetableMarkovGenerator(SimpleMarkovGenerator):
+class RemovePunctuationMixin(object):
+
+    def read_files(self, filenames):
+        """Given a list of files, create a corpus, and make chains from it."""
+
+        input_text = ''
+        for file_name in filenames:
+            input_text += (open(file_name).read() + " ")
+        # save chains dictionary to our instance
+        input_text = input_text.translate(None, string.punctuation)
+        self.chains = self.make_chains(input_text)
+        print "READS MIXIN"
+
+# Works...
+class TweetableMarkovGenerator(RemovePunctuationMixin, SimpleMarkovGenerator):
     character_limit = 140
 
+# Doesn't work...
+# class TweetableMarkovGenerator(SimpleMarkovGenerator, RemovePunctuationMixin):
+#     character_limit = 140
 
     # some 140 char limit
     # def make_text(self):
         # return super(TweetableMarkovGenerator, self).make_text()       
-        
 
 if __name__ == "__main__":
 
@@ -97,3 +115,5 @@ if __name__ == "__main__":
     for i in range(5):
         # print "time {}".format(i+1)
         print birdie.make_text()
+
+    # mixt = TweetableMarkovGenerator
